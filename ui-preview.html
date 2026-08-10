@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TickerDeck · 8.8” UI Preview</title>
+    <style>
+      :root {
+        font-family: Inter, Arial, sans-serif;
+        color: #f4f6f8;
+        background: #07090d;
+        --up: #35d49a;
+        --down: #ff6474;
+        --edge: #202733;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 6px;
+        height: 100vh;
+      }
+      .grid {
+        height: 100%;
+        display: grid;
+        grid-template: repeat(2, minmax(0, 1fr)) / repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--edge);
+        border-radius: 9px;
+        padding: 10px 12px;
+        background: linear-gradient(150deg, #111722, #0b0f15 70%);
+        --a: var(--up);
+      }
+      .card.down {
+        --a: var(--down);
+      }
+      .card:before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        background: var(--a);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      b {
+        font-size: 15px;
+        letter-spacing: 0.05em;
+      }
+      .tag {
+        font-size: 8px;
+        color: #7d8796;
+        letter-spacing: 0.1em;
+      }
+      .price {
+        font-size: clamp(23px, 2.1vw, 35px);
+        font-weight: 750;
+        letter-spacing: -0.035em;
+        margin-top: 4px;
+      }
+      .change {
+        font-size: 11px;
+        color: var(--a);
+        margin-top: 3px;
+      }
+      .chart {
+        position: absolute;
+        left: 12px;
+        bottom: 8px;
+        width: calc(100% - 24px);
+        height: 40%;
+      }
+      .chart path {
+        fill: none;
+        stroke: var(--a);
+        stroke-width: 1.7;
+        vector-effect: non-scaling-stroke;
+      }
+      .chart polygon {
+        fill: var(--a);
+        opacity: 0.08;
+      }
+      .utility {
+        display: flex;
+        flex-direction: column;
+        background:
+          radial-gradient(circle at 100% 0, #15263a, transparent 48%), #0d1118;
+      }
+      .logo {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.11em;
+      }
+      .logo i {
+        font-style: normal;
+        color: #4cc9f0;
+      }
+      .ranges {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--edge);
+        border-radius: 6px;
+        padding: 2px;
+        margin-top: 9px;
+      }
+      .ranges button {
+        height: 27px;
+        border: 0;
+        border-radius: 4px;
+        color: #7f8998;
+        background: transparent;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .ranges .on {
+        color: #071018;
+        background: #6ad7f5;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 7px;
+        align-items: center;
+        margin: auto 0;
+        font-size: 10px;
+        color: #7d8796;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--up);
+        box-shadow: 0 0 8px var(--up);
+      }
+      time {
+        font-size: 12px;
+        color: #eef2f6;
+      }
+      .refresh {
+        border: 1px solid var(--edge);
+        border-radius: 5px;
+        background: #111720;
+        color: #929dac;
+        padding: 6px;
+        font-size: 9px;
+      }
+      @media (max-width: 900px) {
+        body {
+          height: auto;
+        }
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .card {
+          min-height: 190px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="grid" id="grid"></main>
+    <script>
+      const grid = document.getElementById("grid");
+      const data = [
+        ["BTC", "CRYPTO", "116,320", "▲ +2,614  +2.31%", 1],
+        ["ETH", "CRYPTO", "3,820.42", "▲ +64.20  +1.71%", 1],
+        ["SOL", "CRYPTO", "178.64", "▼ −1.84  −1.02%", 0],
+        ["XRP", "CRYPTO", "3.1842", "▲ +0.081  +2.61%", 1],
+        ["DOGE", "CRYPTO", "0.23184", "▼ −0.004  −1.77%", 0],
+        ["NVDA", "US", "182.31", "▲ +3.18  +1.78%", 1],
+        ["QQQ", "US", "568.74", "▼ −2.09  −0.37%", 0],
+      ];
+      const paths = [
+        "M0 31L10 28L20 29L30 20L40 24L50 18L60 21L70 12L80 15L90 8L100 5",
+        "M0 24L10 28L20 20L30 22L40 16L50 19L60 10L70 14L80 7L90 11L100 4",
+        "M0 6L10 10L20 8L30 17L40 14L50 22L60 19L70 28L80 24L90 31L100 29",
+      ];
+      data.forEach((d, i) =>
+        grid.insertAdjacentHTML(
+          "beforeend",
+          `<article class="card ${d[4] ? "" : "down"}"><header><b>${d[0]}</b><span class="tag">${d[1]}</span></header><div class="price">${d[2]}</div><div class="change">${d[3]}</div><svg class="chart" viewBox="0 0 100 36" preserveAspectRatio="none"><polygon points="0,36 0,${d[4] ? 31 : 6} 10,${d[4] ? 28 : 10} 20,${d[4] ? 29 : 8} 40,${d[4] ? 24 : 14} 60,${d[4] ? 21 : 19} 80,${d[4] ? 15 : 24} 100,${d[4] ? 5 : 29} 100,36"/><path d="${paths[d[4] ? i % 2 : 2]}"/></svg></article>`,
+        ),
+      );
+      grid.insertAdjacentHTML(
+        "beforeend",
+        `<aside class="card utility"><header><span class="logo">TICKER<i>DECK</i></span><span class="tag" style="margin-left:auto">8.8” VIEW</span></header><div class="ranges"><button class="on">1D</button><button>1M</button></div><div class="status"><i class="dot"></i><b style="font-size:10px">LIVE</b><span></span><span>마지막 갱신</span><span></span><time id="clock">--:--:--</time></div><button class="refresh">↻ 지금 새로고침</button></aside>`,
+      );
+      const clock = document.getElementById("clock");
+      setInterval(
+        () =>
+          (clock.textContent = new Date().toLocaleTimeString("ko-KR", {
+            hour12: false,
+          })),
+        1000,
+      );
+    </script>
+  </body>
+</html>
