@@ -1,6 +1,6 @@
 # TickerDeck
 
-[![Release](https://github.com/sushistack/tickerdeck/actions/workflows/release.yml/badge.svg)](https://github.com/sushistack/tickerdeck/actions/workflows/release.yml)
+[![Release](https://github.com/sushistack/ticker.deck/actions/workflows/release.yml/badge.svg)](https://github.com/sushistack/ticker.deck/actions/workflows/release.yml)
 
 > A glanceable market dashboard built for an always-on 8.8-inch ultrawide display.
 
