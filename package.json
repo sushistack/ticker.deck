@@ -9,6 +9,7 @@
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
     "test": "vitest",
+    "release:check": "node scripts/verify-release-tag.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

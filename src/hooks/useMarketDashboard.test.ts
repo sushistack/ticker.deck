@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeSnapshots } from "./useMarketDashboard";
+import { mergeSnapshots, pollingPolicy } from "./useMarketDashboard";
 describe("dashboard stale fallback", () => {
   it("keeps the last valid quote and chart when a partial update omits them", () => {
     const quote = {
@@ -25,4 +25,16 @@ describe("dashboard stale fallback", () => {
     expect(merged.QQQ.chart).toHaveLength(1);
     expect(merged.QQQ.stale).toBe(true);
   });
+});
+describe("appliance polling policy", () => {
+  it("uses normal polling while the display is active", () =>
+    expect(pollingPolicy(true, 5)).toEqual({
+      quoteMs: 5000,
+      chartEnabled: true,
+    }));
+  it("reduces quote polling and pauses charts overnight", () =>
+    expect(pollingPolicy(false, 5)).toEqual({
+      quoteMs: 900000,
+      chartEnabled: false,
+    }));
 });

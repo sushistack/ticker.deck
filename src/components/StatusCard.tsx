@@ -1,4 +1,4 @@
-import type { ChartRange } from "../types/market";
+import type { ApplianceStatus, ChartRange } from "../types/market";
 import { formatTime } from "../utils/format";
 import {
   closeWindow,
@@ -13,6 +13,7 @@ export function StatusCard({
   onRange,
   onRefresh,
   onSettings,
+  appliance,
 }: {
   range: ChartRange;
   lastUpdated?: number;
@@ -20,7 +21,21 @@ export function StatusCard({
   onRange: (range: ChartRange) => void;
   onRefresh: () => void;
   onSettings: () => void;
+  appliance: ApplianceStatus;
 }) {
+  const applianceLabel =
+    appliance.displayPower === "unsupported"
+      ? "NO DPMS"
+      : appliance.displayPower === "error"
+        ? "DPMS ERR"
+        : appliance.displayPower === "prewarming"
+          ? "PREWARM"
+          : appliance.displayActive
+            ? "DISPLAY ON"
+            : "SLEEP";
+  const applianceProblem =
+    appliance.displayPower === "unsupported" ||
+    appliance.displayPower === "error";
   return (
     <aside className="status-card">
       <div className="status-top" onMouseDown={startDragging}>
@@ -56,8 +71,16 @@ export function StatusCard({
       </div>
       <RangeSelector value={range} onChange={onRange} />
       <div className="status-body">
-        <span className={`network-dot ${staleCount ? "warn" : ""}`} />{" "}
+        <span
+          className={`network-dot ${staleCount || applianceProblem ? "warn" : ""}`}
+        />{" "}
         <strong>{staleCount ? `${staleCount}개 지연` : "LIVE"}</strong>
+        {appliance.enabled && (
+          <>
+            <span title={appliance.detail}>{applianceLabel}</span>
+            <time>{appliance.nextTransition ?? "--:--"}</time>
+          </>
+        )}
         <span>마지막 갱신</span>
         <time>{formatTime(lastUpdated)}</time>
       </div>

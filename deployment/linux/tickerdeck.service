@@ -1,0 +1,18 @@
+[Unit]
+Description=TickerDeck market appliance
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/tickerdeck
+Environment=TICKERDECK_APPLIANCE_MODE=1
+Environment=TICKERDECK_DISPLAY_ON=07:00
+Environment=TICKERDECK_DISPLAY_OFF=00:00
+EnvironmentFile=-%h/.config/tickerdeck/appliance.env
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+[Install]
+WantedBy=graphical-session.target

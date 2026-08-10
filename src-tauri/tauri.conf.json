@@ -28,5 +28,11 @@
       "csp": "default-src 'self'; style-src 'self'; img-src 'self' asset: http://asset.localhost; connect-src ipc: http://ipc.localhost"
     }
   },
-  "bundle": { "active": false, "targets": "all" }
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": false,
+    "category": "Finance",
+    "shortDescription": "Always-on ultrawide market dashboard"
+  }
 }

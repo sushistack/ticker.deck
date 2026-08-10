@@ -4,6 +4,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { StatusCard } from "./components/StatusCard";
 import { DEFAULT_SETTINGS } from "./config";
 import { useMarketDashboard } from "./hooks/useMarketDashboard";
+import { useApplianceMode } from "./hooks/useApplianceMode";
 import {
   listMonitors,
   loadSettings,
@@ -18,10 +19,12 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [panel, setPanel] = useState(false);
   const [monitors, setMonitors] = useState<MonitorPreference[]>([]);
+  const appliance = useApplianceMode();
   const { snapshots, lastUpdated, refresh } = useMarketDashboard(
     settings.instruments,
     settings.range,
     settings.quoteRefreshSeconds,
+    appliance.ready && appliance.status.displayActive,
   );
   useEffect(() => {
     void loadSettings()
@@ -88,6 +91,7 @@ export default function App() {
           onRange={(range) => setSettings((value) => ({ ...value, range }))}
           onRefresh={() => void refresh()}
           onSettings={openSettings}
+          appliance={appliance.status}
         />
       </section>
       {panel && (

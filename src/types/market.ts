@@ -40,3 +40,17 @@ export interface AppSettings {
   fullscreen: boolean;
   quoteRefreshSeconds: number;
 }
+export type DisplayPower =
+  | "unmanaged"
+  | "prewarming"
+  | "on"
+  | "off"
+  | "unsupported"
+  | "error";
+export interface ApplianceStatus {
+  enabled: boolean;
+  displayActive: boolean;
+  displayPower: DisplayPower;
+  nextTransition?: string;
+  detail?: string;
+}

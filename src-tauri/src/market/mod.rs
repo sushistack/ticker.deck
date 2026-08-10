@@ -67,41 +67,52 @@ impl<P: MarketDataProvider> MarketService<P> {
         }
     }
     pub async fn quotes(&self, symbols: Vec<String>) -> Vec<MarketSnapshot> {
-        let fetched = self.provider.get_quotes(&symbols).await;
+        let now = Instant::now();
+        let cache = self.quotes.read().await;
+        let stale_symbols: Vec<String> = symbols
+            .iter()
+            .filter(|symbol| {
+                cache
+                    .get(*symbol)
+                    .is_none_or(|entry| now.duration_since(entry.updated) >= Duration::from_secs(4))
+            })
+            .cloned()
+            .collect();
+        drop(cache);
+        let fetched = if stale_symbols.is_empty() {
+            Vec::new()
+        } else {
+            self.provider.get_quotes(&stale_symbols).await
+        };
         let mut cache = self.quotes.write().await;
+        let mut failures = HashMap::new();
+        for (symbol, result) in stale_symbols.iter().zip(fetched) {
+            match result {
+                Ok(quote) => {
+                    cache.insert(
+                        symbol.clone(),
+                        CacheEntry {
+                            value: quote,
+                            updated: now,
+                        },
+                    );
+                }
+                Err(error) => {
+                    failures.insert(symbol.clone(), error);
+                }
+            }
+        }
         symbols
             .into_iter()
-            .enumerate()
-            .map(|(index, symbol)| {
-                match fetched
-                    .get(index)
+            .map(|symbol| MarketSnapshot {
+                quote: cache.get(&symbol).map(|entry| entry.value.clone()),
+                stale: failures.contains_key(&symbol) || !cache.contains_key(&symbol),
+                error: failures
+                    .get(&symbol)
                     .cloned()
-                    .unwrap_or_else(|| Err("missing provider result".into()))
-                {
-                    Ok(quote) => {
-                        cache.insert(
-                            symbol.clone(),
-                            CacheEntry {
-                                value: quote.clone(),
-                                updated: Instant::now(),
-                            },
-                        );
-                        MarketSnapshot {
-                            symbol,
-                            quote: Some(quote),
-                            chart: vec![],
-                            stale: false,
-                            error: None,
-                        }
-                    }
-                    Err(error) => MarketSnapshot {
-                        quote: cache.get(&symbol).map(|entry| entry.value.clone()),
-                        symbol,
-                        chart: vec![],
-                        stale: true,
-                        error: Some(error),
-                    },
-                }
+                    .or_else(|| (!cache.contains_key(&symbol)).then(|| "quote unavailable".into())),
+                symbol,
+                chart: vec![],
             })
             .collect()
     }
@@ -119,7 +130,11 @@ impl<P: MarketDataProvider> MarketService<P> {
             .cloned()
             .collect();
         drop(cache);
-        let fetched = self.provider.get_charts(&stale_symbols, range).await;
+        let fetched = if stale_symbols.is_empty() {
+            Vec::new()
+        } else {
+            self.provider.get_charts(&stale_symbols, range).await
+        };
         let mut cache = self.charts.write().await;
         let mut failures = HashMap::new();
         for (symbol, result) in stale_symbols.iter().zip(fetched) {
@@ -163,6 +178,46 @@ impl<P: MarketDataProvider> MarketService<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_trait::async_trait;
+    use std::sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Arc,
+    };
+
+    struct FakeProvider {
+        calls: Arc<AtomicUsize>,
+        fail: Arc<AtomicBool>,
+    }
+    #[async_trait]
+    impl MarketDataProvider for FakeProvider {
+        async fn get_quotes(&self, symbols: &[String]) -> Vec<Result<Quote, String>> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            symbols
+                .iter()
+                .map(|symbol| {
+                    if self.fail.load(Ordering::SeqCst) {
+                        Err("offline".into())
+                    } else {
+                        Ok(Quote {
+                            symbol: symbol.clone(),
+                            price: 2.0,
+                            previous_close: 1.0,
+                            change: 1.0,
+                            change_percent: 100.0,
+                            timestamp: 1,
+                        })
+                    }
+                })
+                .collect()
+        }
+        async fn get_charts(
+            &self,
+            symbols: &[String],
+            _range: ChartRange,
+        ) -> Vec<Result<Vec<ChartPoint>, String>> {
+            symbols.iter().map(|_| Ok(vec![])).collect()
+        }
+    }
     #[test]
     fn maps_ranges_to_sensible_yahoo_intervals() {
         assert_eq!(ChartRange::OneDay.yahoo().0, "1d");
@@ -174,5 +229,33 @@ mod tests {
         let quote = yahoo::normalize_quote("NVDA", 182.31, 180.0, 1).unwrap();
         assert!((quote.change - 2.31).abs() < 0.001);
         assert!((quote.change_percent - 1.2833).abs() < 0.001);
+    }
+    #[tokio::test]
+    async fn fresh_quote_cache_avoids_duplicate_prewarm_fetch() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let service = MarketService::new(FakeProvider {
+            calls: calls.clone(),
+            fail: Arc::new(AtomicBool::new(false)),
+        });
+        let first = service.quotes(vec!["BTC-USD".into()]).await;
+        let second = service.quotes(vec!["BTC-USD".into()]).await;
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert_eq!(first[0].quote, second[0].quote);
+    }
+    #[tokio::test]
+    async fn failed_refresh_keeps_last_quote_and_marks_stale() {
+        let fail = Arc::new(AtomicBool::new(false));
+        let service = MarketService::new(FakeProvider {
+            calls: Arc::new(AtomicUsize::new(0)),
+            fail: fail.clone(),
+        });
+        let _ = service.quotes(vec!["QQQ".into()]).await;
+        service.quotes.write().await.get_mut("QQQ").unwrap().updated =
+            Instant::now() - Duration::from_secs(5);
+        fail.store(true, Ordering::SeqCst);
+        let result = service.quotes(vec!["QQQ".into()]).await;
+        assert!(result[0].stale);
+        assert_eq!(result[0].quote.as_ref().map(|quote| quote.price), Some(2.0));
+        assert_eq!(result[0].error.as_deref(), Some("offline"));
     }
 }

@@ -3,6 +3,13 @@ import { CHART_REFRESH_MS } from "../config";
 import { createMarketDataProvider } from "../services/marketData";
 import type { ChartRange, Instrument, MarketSnapshot } from "../types/market";
 
+export function pollingPolicy(displayActive: boolean, quoteSeconds: number) {
+  return {
+    quoteMs: displayActive ? Math.max(5, quoteSeconds) * 1000 : 15 * 60 * 1000,
+    chartEnabled: displayActive,
+  };
+}
+
 export const mergeSnapshots = (
   current: Record<string, MarketSnapshot>,
   incoming: MarketSnapshot[],
@@ -23,7 +30,9 @@ export function useMarketDashboard(
   instruments: Instrument[],
   range: ChartRange,
   quoteSeconds: number,
+  displayActive = true,
 ) {
+  const policy = pollingPolicy(displayActive, quoteSeconds);
   const provider = useMemo(createMarketDataProvider, []);
   const [snapshots, setSnapshots] = useState<Record<string, MarketSnapshot>>(
     {},
@@ -74,25 +83,26 @@ export function useMarketDashboard(
   }, [provider, range, symbols]);
   useEffect(() => {
     mounted.current = true;
-    void refreshQuotes();
-    const timer = window.setInterval(
-      refreshQuotes,
-      Math.max(5, quoteSeconds) * 1000,
-    );
+    if (displayActive) void refreshQuotes();
+    const timer = window.setInterval(refreshQuotes, policy.quoteMs);
     return () => {
       mounted.current = false;
       window.clearInterval(timer);
     };
-  }, [quoteSeconds, refreshQuotes]);
+  }, [displayActive, policy.quoteMs, refreshQuotes]);
   useEffect(() => {
     mounted.current = true;
+    if (!policy.chartEnabled)
+      return () => {
+        mounted.current = false;
+      };
     void refreshCharts();
     const timer = window.setInterval(refreshCharts, CHART_REFRESH_MS[range]);
     return () => {
       mounted.current = false;
       window.clearInterval(timer);
     };
-  }, [range, refreshCharts]);
+  }, [policy.chartEnabled, range, refreshCharts]);
   return {
     snapshots,
     lastUpdated,

@@ -614,3 +614,70 @@ Before coding:
 6. Verify current Tauri APIs/plugins before relying on them.
 
 Then implement autonomously.
+
+
+Additional decisions made after the original specification:
+
+1. Keep the existing Tauri + React + TypeScript + Rust architecture.
+   Do NOT convert the project into a web-only kiosk application.
+
+2. The primary production deployment target is now:
+   Proxmox Mini PC
+   -> Ubuntu VM
+   -> TickerDeck Tauri application
+   -> physical 8.8-inch HDMI/DP display
+
+3. Windows and normal Ubuntu desktop builds should still remain supported,
+   but the Ubuntu VM is the primary always-on deployment environment.
+
+4. The VM and TickerDeck application may remain running 24/7.
+
+5. The physical display should follow this schedule:
+   - ON: 07:00 local time
+   - OFF: 00:00 local time
+   The goal is for the user to be able to glance at the market immediately
+   in the morning without manually starting another PC.
+
+6. Prefer turning the actual display output/backlight off through the OS
+   display/DPMS mechanism rather than merely rendering a black screen.
+
+7. Before the display turns on in the morning, perform a full market-data
+   refresh so the first visible state is current.
+
+8. Outside the display-active period, aggressive 5-second polling is not
+   necessary. It is acceptable to pause or significantly reduce polling
+   overnight and refresh immediately before display wake.
+
+9. Production Linux packaging:
+   - .deb is the primary Ubuntu deployment artifact.
+   - AppImage may also be produced for easy testing/manual execution.
+
+10. Windows packaging:
+    - Produce the normal supported Tauri Windows installer artifact.
+
+11. Preferred release flow:
+    git tag / release
+    -> GitHub Actions
+    -> build Linux and Windows artifacts
+    -> publish artifacts to GitHub Release
+
+12. Do not deploy automatically on every push to main.
+    Prefer explicit version/tag-based releases.
+
+13. For the Ubuntu VM:
+    - TickerDeck should start automatically after graphical login.
+    - Prefer a user-level systemd service or another reliable GUI-session
+      startup mechanism.
+    - Configure automatic restart after unexpected application failure.
+    - Do not run the GUI application as a normal root system service.
+
+14. Automatic application self-update is NOT required for the initial MVP.
+    Structure the project so Tauri updater support could be added later.
+
+15. The Ubuntu VM/display deployment is operationally more important than
+    generic multi-monitor desktop behavior.
+    Preserve multi-monitor support, but prioritize reliable startup on the
+    dedicated VM-connected 8.8-inch display.
+
+16. Treat the 8.8-inch monitor as a permanent market appliance/display,
+    not merely a temporary second monitor attached to a workstation.
