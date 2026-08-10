@@ -1,6 +1,18 @@
 # TickerDeck
 
+[![Release](https://github.com/sushistack/tickerdeck/actions/workflows/release.yml/badge.svg)](https://github.com/sushistack/tickerdeck/actions/workflows/release.yml)
+
+> A glanceable market dashboard built for an always-on 8.8-inch ultrawide display.
+
 TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows five crypto assets plus NVDA and QQQ in a dense 4×2 grid, with global 1D/1M ranges, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
+
+## Highlights
+
+- Native Tauri 2 application with a React/TypeScript UI and Rust market-data layer
+- Purpose-built 1920×480 layout for an 8.8-inch ultrawide display
+- Scheduled Ubuntu/X11 DPMS wake and sleep with refresh-before-wake behavior
+- Reduced overnight polling for reliable 24/7 appliance operation
+- Tag-based GitHub releases for Ubuntu `.deb`/AppImage and Windows NSIS artifacts
 
 ## Screenshot
 
