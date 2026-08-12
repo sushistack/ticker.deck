@@ -20,7 +20,7 @@ export function mergeSettings(value?: Partial<AppSettings>): AppSettings {
   const instruments =
     Array.isArray(value?.instruments) &&
     value.instruments.length > 0 &&
-    value.instruments.length === 11 &&
+    value.instruments.length === 13 &&
     value.instruments.every(validInstrument)
       ? value.instruments
       : DEFAULT_SETTINGS.instruments;

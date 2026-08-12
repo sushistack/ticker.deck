@@ -13,11 +13,15 @@ export const MarketCard = memo(function MarketCard({
 }) {
   const quote = snapshot?.quote;
   const chart = snapshot?.chart ?? [];
-  const up = quote
-    ? quote.change >= 0
-    : chart.length > 1
-      ? chart.at(-1)!.price >= chart[0].price
-      : true;
+  const baseline = chart.at(0)?.price;
+  const currentPrice = quote?.price ?? chart.at(-1)?.price;
+  const rangeChange =
+    baseline && currentPrice !== undefined ? currentPrice - baseline : undefined;
+  const rangeChangePercent =
+    rangeChange !== undefined && baseline
+      ? (rangeChange / baseline) * 100
+      : undefined;
+  const up = rangeChange === undefined || rangeChange >= 0;
   const direction = up ? "up" : "down";
   return (
     <article
@@ -43,11 +47,11 @@ export const MarketCard = memo(function MarketCard({
       </div>
       <div className="price">{quote ? formatPrice(quote.price) : "—"}</div>
       <div className="change">
-        {quote ? (
+        {rangeChange !== undefined && rangeChangePercent !== undefined ? (
           <>
             <span aria-hidden="true">{up ? "▲" : "▼"}</span>{" "}
-            {formatSigned(quote.change)}{" "}
-            <strong>{formatSigned(quote.changePercent, "%")}</strong>
+            {formatSigned(rangeChange)}{" "}
+            <strong>({formatSigned(rangeChangePercent, "%")})</strong>
           </>
         ) : (
           "—"

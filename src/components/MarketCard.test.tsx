@@ -4,7 +4,7 @@ import { MarketCard } from "./MarketCard";
 const instrument = { symbol: "NVDA", label: "NVDA", type: "stock" as const };
 describe("MarketCard", () => {
   it("shows textual falling direction and stale state", () => {
-    render(
+    const { container } = render(
       <MarketCard
         instrument={instrument}
         range="1D"
@@ -14,8 +14,8 @@ describe("MarketCard", () => {
             symbol: "NVDA",
             price: 182.31,
             previousClose: 184,
-            change: -1.69,
-            changePercent: -0.92,
+            change: 99,
+            changePercent: 99,
             timestamp: 1,
           },
           chart: [
@@ -31,5 +31,14 @@ describe("MarketCard", () => {
     expect(screen.getByText("STALE")).toBeInTheDocument();
     expect(screen.getByText("1D")).toBeInTheDocument();
     expect(screen.getByText("182.31")).toBeInTheDocument();
+    expect(container.querySelector(".change")).toHaveTextContent(
+      "▼ −1.69 (−0.92%)",
+    );
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "STRONG" && element.textContent === "(−0.92%)",
+      ),
+    ).toBeInTheDocument();
   });
 });

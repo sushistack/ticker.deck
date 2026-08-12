@@ -33,7 +33,7 @@ input {
 .dashboard-grid {
   height: 100%;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 5px;
 }
@@ -62,7 +62,7 @@ input {
   --accent: var(--down);
 }
 .card-top {
-  height: 20px;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -81,11 +81,11 @@ input {
 }
 .range-badge {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1;
-  padding: 3px 6px;
+  padding: 5px 10px;
   border-radius: 999px;
   color: #f4f6f8;
   background: color-mix(in srgb, var(--accent) 13%, transparent);
@@ -109,13 +109,13 @@ input {
 }
 .change {
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: 20px;
   color: var(--accent);
   margin-top: 3px;
 }
 .change strong {
   margin-left: 5px;
-  font-size: 12px;
+  font-size: 22px;
 }
 .sparkline {
   position: absolute;

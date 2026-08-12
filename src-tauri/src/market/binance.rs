@@ -90,6 +90,7 @@ pub fn binance_pair(symbol: &str) -> Result<&str, String> {
             "SOL" => "SOLUSDT",
             "XRP" => "XRPUSDT",
             "DOGE" => "DOGEUSDT",
+            "ZEC" => "ZECUSDT",
             "BNB" => "BNBUSDT",
             "ADA" => "ADAUSDT",
             "LINK" => "LINKUSDT",
@@ -158,6 +159,7 @@ mod tests {
     #[test]
     fn maps_ui_symbols_to_usdt_pairs() {
         assert_eq!(binance_pair("BTC-USD").unwrap(), "BTCUSDT");
+        assert_eq!(binance_pair("ZEC-USD").unwrap(), "ZECUSDT");
         assert_eq!(binance_pair("AVAX-USD").unwrap(), "AVAXUSDT");
         assert!(binance_pair("NVDA").is_err());
     }

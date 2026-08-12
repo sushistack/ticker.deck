@@ -4,14 +4,14 @@
 
 > A glanceable market dashboard built for an always-on 8.8-inch ultrawide display.
 
-TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows five crypto assets plus QQQ, NASDAQ, S&P 500, ORCL, LHX, and the USD/KRW rate alongside a local clock/status tile in a dense 6×2 grid, with automatic 1D/1M rotation, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
+TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. It runs as a normal Ubuntu or Windows desktop application, including on a dual-boot workstation. It shows six crypto assets, USD/KRW, NASDAQ, S&P 500, QQQ, IONQ, ORCL, and LHX alongside a local clock/status tile in a dense 7×2 grid, with automatic 1D/1M rotation, range-relative changes, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
 
 ## Highlights
 
 - Native Tauri 2 application with a React/TypeScript UI and Rust market-data layer
-- Purpose-built 6×2 layout for a 1920×480 8.8-inch ultrawide display
+- Purpose-built 7×2 layout for a 1920×480 8.8-inch ultrawide display
 - Binance crypto quotes/charts and Yahoo Finance US equity data behind one Rust provider
-- Scheduled Ubuntu/X11 DPMS wake and sleep with refresh-before-wake behavior
+- Optional scheduled Ubuntu/X11 DPMS wake and sleep for dedicated appliances
 - Reduced overnight polling for reliable 24/7 appliance operation
 - Tag-based GitHub releases for Ubuntu `.deb`/AppImage and Windows NSIS artifacts
 
@@ -52,9 +52,13 @@ npm run tauri build -- --no-bundle
 
 On Windows run these commands in PowerShell after installing the Tauri prerequisites. On Ubuntu install the Tauri Debian dependencies first, then run the same commands. Platform configuration produces NSIS on Windows and both `.deb` and AppImage on Linux. Automatic updater artifacts are intentionally disabled for the MVP; version/config boundaries remain separate so the official updater can be added later.
 
+## Windows desktop setup
+
+For the dual-boot workstation setup, follow [`docs/windows-setup.md`](docs/windows-setup.md). Windows needs its own TickerDeck installation, display orientation, target-monitor selection, fullscreen preference, and login-launch preference; Linux systemd and `xrandr` settings do not carry across operating systems. Installing the packaged app does not require Node.js, Rust, or the Tauri CLI.
+
 ## Ubuntu VM appliance deployment
 
-Use an Ubuntu desktop VM with direct access to the GPU/display output and automatic login for a dedicated, unprivileged appliance user. TickerDeck is a GUI application and must not be installed as a root system service.
+For a dedicated Ubuntu display appliance, use an unprivileged graphical desktop user with direct access to the display output and automatic login. TickerDeck is a GUI application and must not be installed as a root system service. An ordinary workstation can leave appliance mode disabled and still use login launch, monitor restoration, and fullscreen mode.
 
 The MVP physical power controller uses X11 DPMS through `xset`, whose DPMS force operation supports explicit on/off states. Select **Ubuntu on Xorg** at login and install `x11-xserver-utils`. Wayland compositor power APIs are not portable; TickerDeck reports them as unsupported rather than pretending a black window powered off the monitor.
 

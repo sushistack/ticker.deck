@@ -12,7 +12,12 @@ describe("settings", () => {
     expect(result.instruments).toEqual(DEFAULT_SETTINGS.instruments);
   });
   it("rejects an empty instrument list", () =>
-    expect(mergeSettings({ instruments: [] }).instruments).toHaveLength(11));
+    expect(mergeSettings({ instruments: [] }).instruments).toHaveLength(13));
+  it("keeps Zcash after DOGE and IONQ after QQQ", () => {
+    const symbols = DEFAULT_SETTINGS.instruments.map(({ symbol }) => symbol);
+    expect(symbols.indexOf("ZEC-USD")).toBe(symbols.indexOf("DOGE-USD") + 1);
+    expect(symbols.indexOf("IONQ")).toBe(symbols.indexOf("QQQ") + 1);
+  });
   it("migrates the legacy seven-card wall to the current defaults", () => {
     const legacy = DEFAULT_SETTINGS.instruments.slice(0, 5).concat([
       { symbol: "NVDA", label: "NVDA", type: "stock" },
