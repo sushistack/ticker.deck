@@ -4,7 +4,7 @@
 
 > A glanceable market dashboard built for an always-on 8.8-inch ultrawide display.
 
-TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows nine crypto assets plus NVDA and QQQ alongside a local clock/status tile in a dense 6×2 grid, with automatic 1D/1M rotation, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
+TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows five crypto assets plus QQQ, NASDAQ, S&P 500, ORCL, LHX, and the USD/KRW rate alongside a local clock/status tile in a dense 6×2 grid, with automatic 1D/1M rotation, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
 
 ## Highlights
 

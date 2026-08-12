@@ -23,12 +23,12 @@ function mockPrice(symbol: string): number {
     "SOL-USD": 178.64,
     "XRP-USD": 3.1842,
     "DOGE-USD": 0.23184,
-    "BNB-USD": 735.2,
-    "ADA-USD": 0.78,
-    "LINK-USD": 24.15,
-    "AVAX-USD": 36.42,
-    NVDA: 182.31,
     QQQ: 568.74,
+    "^IXIC": 21840.2,
+    "^GSPC": 6412.5,
+    ORCL: 241.63,
+    LHX: 278.9,
+    "KRW=X": 1382.4,
   };
   return bases[symbol] ?? 100;
 }
@@ -48,8 +48,9 @@ function mockQuote(symbol: string): Quote {
   };
 }
 function mockChart(symbol: string, range: ChartRange): ChartPoint[] {
-  const count = range === "1D" ? 48 : 60;
-  const interval = range === "1D" ? 300 : 43_200;
+  // ponytail: mirror the production candle density (5m/1h) so mock isn't visibly coarser
+  const count = range === "1D" ? 288 : 720;
+  const interval = range === "1D" ? 300 : 3_600;
   const now = Math.floor(Date.now() / 1000);
   const base = mockPrice(symbol);
   return Array.from({ length: count }, (_, index) => ({
@@ -57,7 +58,7 @@ function mockChart(symbol: string, range: ChartRange): ChartPoint[] {
     price:
       base *
       (1 +
-        Math.sin(index / 5 + seeded(symbol)) * 0.012 +
+        Math.sin((index / count) * 12 + seeded(symbol)) * 0.012 +
         (index / count - 0.5) * (seeded(symbol) % 2 ? 0.02 : -0.018)),
   }));
 }

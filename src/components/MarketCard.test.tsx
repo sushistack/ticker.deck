@@ -7,6 +7,7 @@ describe("MarketCard", () => {
     render(
       <MarketCard
         instrument={instrument}
+        range="1D"
         snapshot={{
           symbol: "NVDA",
           quote: {
@@ -28,6 +29,7 @@ describe("MarketCard", () => {
     );
     expect(screen.getByText("▼")).toBeInTheDocument();
     expect(screen.getByText("STALE")).toBeInTheDocument();
+    expect(screen.getByText("1D")).toBeInTheDocument();
     expect(screen.getByText("182.31")).toBeInTheDocument();
   });
 });

@@ -68,16 +68,28 @@ input {
   gap: 7px;
 }
 .symbol {
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.05em;
 }
 .asset-type,
 .stale {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--muted);
+}
+.range-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #f4f6f8;
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
 }
 .stale {
   margin-left: auto;

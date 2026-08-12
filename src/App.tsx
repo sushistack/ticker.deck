@@ -93,6 +93,7 @@ export default function App() {
             key={instrument.symbol}
             instrument={instrument}
             snapshot={snapshots[instrument.symbol]}
+            range={displayRange}
           />
         ))}
         <StatusCard

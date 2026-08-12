@@ -33,12 +33,12 @@ impl Default for AppSettings {
                 ("SOL-USD", "SOL", "crypto"),
                 ("XRP-USD", "XRP", "crypto"),
                 ("DOGE-USD", "DOGE", "crypto"),
-                ("BNB-USD", "BNB", "crypto"),
-                ("ADA-USD", "ADA", "crypto"),
-                ("LINK-USD", "LINK", "crypto"),
-                ("AVAX-USD", "AVAX", "crypto"),
-                ("NVDA", "NVDA", "stock"),
+                ("KRW=X", "USD/KRW", "stock"),
+                ("^IXIC", "NASDAQ", "stock"),
+                ("^GSPC", "S&P500", "stock"),
                 ("QQQ", "QQQ", "stock"),
+                ("ORCL", "ORCL", "stock"),
+                ("LHX", "LHX", "stock"),
             ]
             .into_iter()
             .map(|(symbol, label, kind)| Instrument {
