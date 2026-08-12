@@ -46,4 +46,24 @@ describe("StatusCard appliance state", () => {
     fireEvent.click(view.getByText("↻ 지금 새로고침"));
     expect(refresh).toHaveBeenCalledOnce();
   });
+
+  it("labels browser data as demo rather than live", () => {
+    render(
+      <StatusCard
+        range="1D"
+        staleCount={0}
+        onRange={vi.fn()}
+        onRefresh={vi.fn()}
+        onSettings={vi.fn()}
+        demo
+        appliance={{
+          enabled: false,
+          displayActive: true,
+          displayPower: "unmanaged",
+        }}
+      />,
+    );
+    expect(screen.getByText("DEMO / MOCK")).toBeInTheDocument();
+    expect(screen.queryByText("LIVE")).not.toBeInTheDocument();
+  });
 });

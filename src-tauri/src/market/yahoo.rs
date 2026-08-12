@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use futures::future::join_all;
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct YahooFinanceProvider {
@@ -18,7 +17,9 @@ impl YahooFinanceProvider {
                 .timeout(std::time::Duration::from_secs(8))
                 .build()
                 .expect("HTTP client"),
-            base_url: "https://query1.finance.yahoo.com".into(),
+            // query1 is frequently rate-limited for anonymous desktop clients;
+            // query2 serves the same chart API and is more reliable here.
+            base_url: "https://query2.finance.yahoo.com".into(),
         }
     }
     async fn chart(
@@ -60,79 +61,24 @@ impl YahooFinanceProvider {
                     .unwrap_or_else(|| "symbol unavailable".into())
             })
     }
-    async fn batch_quotes(&self, symbols: &[String]) -> Result<HashMap<String, Quote>, String> {
-        let joined = symbols.join(",");
-        let url = format!(
-            "{}/v7/finance/quote?symbols={}",
-            self.base_url,
-            urlencoding::encode(&joined)
-        );
-        let response = self
-            .client
-            .get(url)
-            .send()
-            .await
-            .map_err(|error| format!("batch network: {error}"))?;
-        if !response.status().is_success() {
-            return Err(format!("batch Yahoo HTTP {}", response.status()));
-        }
-        let body: YahooBatchResponse = response
-            .json()
-            .await
-            .map_err(|error| format!("malformed batch response: {error}"))?;
-        Ok(body
-            .quote_response
-            .result
-            .into_iter()
-            .filter_map(|item| {
-                normalize_quote(
-                    &item.symbol,
-                    item.regular_market_price?,
-                    item.regular_market_previous_close?,
-                    item.regular_market_time.unwrap_or_default(),
-                )
-                .ok()
-                .map(|quote| (item.symbol, quote))
-            })
-            .collect())
-    }
 }
 #[async_trait]
 impl MarketDataProvider for YahooFinanceProvider {
     async fn get_quotes(&self, symbols: &[String]) -> Vec<Result<Quote, String>> {
-        match self.batch_quotes(symbols).await {
-            Ok(quotes) => symbols
-                .iter()
-                .map(|symbol| {
-                    quotes
-                        .get(symbol)
-                        .cloned()
-                        .ok_or_else(|| "symbol missing from batch response".into())
-                })
-                .collect(),
-            Err(batch_error) => {
-                join_all(symbols.iter().map(|symbol| {
-                    let batch_error = batch_error.clone();
-                    async move {
-                        let result = self
-                            .chart(symbol, "1d", "1m")
-                            .await
-                            .map_err(|error| format!("{batch_error}; fallback: {error}"))?;
-                        normalize_quote(
-                            symbol,
-                            result.meta.regular_market_price.ok_or("missing price")?,
-                            result
-                                .meta
-                                .chart_previous_close
-                                .or(result.meta.previous_close)
-                                .ok_or("missing previous close")?,
-                            result.meta.regular_market_time.unwrap_or_default(),
-                        )
-                    }
-                }))
-                .await
-            }
-        }
+        join_all(symbols.iter().map(|symbol| async move {
+            let result = self.chart(symbol, "1d", "1m").await?;
+            normalize_quote(
+                symbol,
+                result.meta.regular_market_price.ok_or("missing price")?,
+                result
+                    .meta
+                    .chart_previous_close
+                    .or(result.meta.previous_close)
+                    .ok_or("missing previous close")?,
+                result.meta.regular_market_time.unwrap_or_default(),
+            )
+        }))
+        .await
     }
     async fn get_charts(
         &self,
@@ -196,24 +142,6 @@ struct YahooResponse {
     chart: YahooChart,
 }
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct YahooBatchResponse {
-    quote_response: YahooBatchResult,
-}
-#[derive(Deserialize)]
-struct YahooBatchResult {
-    #[serde(default)]
-    result: Vec<YahooBatchQuote>,
-}
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct YahooBatchQuote {
-    symbol: String,
-    regular_market_price: Option<f64>,
-    regular_market_previous_close: Option<f64>,
-    regular_market_time: Option<i64>,
-}
-#[derive(Deserialize)]
 struct YahooChart {
     result: Option<Vec<YahooResult>>,
     error: Option<YahooError>,
@@ -273,17 +201,8 @@ mod tests {
         assert!(normalize_quote("BAD", 1.0, 0.0, 0).is_err());
     }
     #[test]
-    fn parses_batch_quotes_by_symbol() {
-        let json = r#"{"quoteResponse":{"result":[{"symbol":"NVDA","regularMarketPrice":182.31,"regularMarketPreviousClose":180.0,"regularMarketTime":42}]}}"#;
-        let body: YahooBatchResponse = serde_json::from_str(json).unwrap();
-        let item = &body.quote_response.result[0];
-        let quote = normalize_quote(
-            &item.symbol,
-            item.regular_market_price.unwrap(),
-            item.regular_market_previous_close.unwrap(),
-            item.regular_market_time.unwrap(),
-        )
-        .unwrap();
+    fn normalizes_chart_metadata_as_quote() {
+        let quote = normalize_quote("NVDA", 182.31, 180.0, 42).unwrap();
         assert_eq!(quote.symbol, "NVDA");
         assert!((quote.change - 2.31).abs() < 0.001);
     }

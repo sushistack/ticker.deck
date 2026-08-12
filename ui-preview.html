@@ -24,15 +24,15 @@
       .grid {
         height: 100%;
         display: grid;
-        grid-template: repeat(2, minmax(0, 1fr)) / repeat(4, minmax(0, 1fr));
-        gap: 6px;
+        grid-template: repeat(2, minmax(0, 1fr)) / repeat(6, minmax(0, 1fr));
+        gap: 5px;
       }
       .card {
         position: relative;
         overflow: hidden;
         border: 1px solid var(--edge);
-        border-radius: 9px;
-        padding: 10px 12px;
+        border-radius: 7px;
+        padding: 8px 9px;
         background: linear-gradient(150deg, #111722, #0b0f15 70%);
         --a: var(--up);
       }
@@ -52,7 +52,7 @@
         gap: 7px;
       }
       b {
-        font-size: 15px;
+        font-size: 13px;
         letter-spacing: 0.05em;
       }
       .tag {
@@ -61,7 +61,7 @@
         letter-spacing: 0.1em;
       }
       .price {
-        font-size: clamp(23px, 2.1vw, 35px);
+        font-size: clamp(19px, 1.55vw, 28px);
         font-weight: 750;
         letter-spacing: -0.035em;
         margin-top: 4px;
@@ -73,10 +73,10 @@
       }
       .chart {
         position: absolute;
-        left: 12px;
-        bottom: 8px;
-        width: calc(100% - 24px);
-        height: 40%;
+        left: 9px;
+        bottom: 7px;
+        width: calc(100% - 18px);
+        height: 42%;
       }
       .chart path {
         fill: none;
@@ -109,10 +109,10 @@
         border: 1px solid var(--edge);
         border-radius: 6px;
         padding: 2px;
-        margin-top: 9px;
+        margin-top: 6px;
       }
       .ranges button {
-        height: 27px;
+        height: 22px;
         border: 0;
         border-radius: 4px;
         color: #7f8998;
@@ -133,6 +133,16 @@
         font-size: 10px;
         color: #7d8796;
       }
+      .big-clock {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 8px;
+      }
+      .big-clock time {
+        font-size: clamp(21px, 1.7vw, 31px);
+        font-weight: 800;
+      }
       .dot {
         width: 6px;
         height: 6px;
@@ -152,12 +162,12 @@
         padding: 6px;
         font-size: 9px;
       }
-      @media (max-width: 900px) {
+      @media (max-width: 1200px) {
         body {
           height: auto;
         }
         .grid {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
         }
         .card {
           min-height: 190px;
@@ -175,6 +185,10 @@
         ["SOL", "CRYPTO", "178.64", "▼ −1.84  −1.02%", 0],
         ["XRP", "CRYPTO", "3.1842", "▲ +0.081  +2.61%", 1],
         ["DOGE", "CRYPTO", "0.23184", "▼ −0.004  −1.77%", 0],
+        ["BNB", "CRYPTO", "735.20", "▲ +4.20  +0.57%", 1],
+        ["ADA", "CRYPTO", "0.7800", "▼ −0.012  −1.52%", 0],
+        ["LINK", "CRYPTO", "24.15", "▲ +0.41  +1.73%", 1],
+        ["AVAX", "CRYPTO", "36.42", "▼ −0.38  −1.03%", 0],
         ["NVDA", "US", "182.31", "▲ +3.18  +1.78%", 1],
         ["QQQ", "US", "568.74", "▼ −2.09  −0.37%", 0],
       ];
@@ -191,16 +205,20 @@
       );
       grid.insertAdjacentHTML(
         "beforeend",
-        `<aside class="card utility"><header><span class="logo">TICKER<i>DECK</i></span><span class="tag" style="margin-left:auto">8.8” VIEW</span></header><div class="ranges"><button class="on">1D</button><button>1M</button></div><div class="status"><i class="dot"></i><b style="font-size:10px">LIVE</b><span></span><span>마지막 갱신</span><span></span><time id="clock">--:--:--</time></div><button class="refresh">↻ 지금 새로고침</button></aside>`,
+        `<aside class="card utility"><header><span class="logo">TICKER<i>DECK</i></span><span class="tag" style="margin-left:auto">8.8” VIEW</span></header><div class="big-clock"><time id="clock">--:--:--</time><span class="tag">LOCAL</span></div><div class="ranges"><button class="on">1D</button><button>1M</button></div><div class="status"><i class="dot"></i><b style="font-size:10px">DEMO / MOCK</b><span></span><span>5초 자동 전환</span></div><button class="refresh">↻ 지금 새로고침</button></aside>`,
       );
       const clock = document.getElementById("clock");
-      setInterval(
-        () =>
-          (clock.textContent = new Date().toLocaleTimeString("ko-KR", {
-            hour12: false,
-          })),
-        1000,
-      );
+      const updateClock = () =>
+        (clock.textContent = new Date().toLocaleTimeString("ko-KR", {
+          hour12: false,
+        }));
+      updateClock();
+      setInterval(updateClock, 1000);
+      setInterval(() => {
+        document.querySelectorAll(".ranges button").forEach((button) =>
+          button.classList.toggle("on"),
+        );
+      }, 5000);
     </script>
   </body>
 </html>

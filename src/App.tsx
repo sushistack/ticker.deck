@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { MarketCard } from "./components/MarketCard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { StatusCard } from "./components/StatusCard";
-import { DEFAULT_SETTINGS } from "./config";
-import { useMarketDashboard } from "./hooks/useMarketDashboard";
+import { DEFAULT_SETTINGS, RANGE_ROTATION_MS } from "./config";
+import { nextRange, useMarketDashboard } from "./hooks/useMarketDashboard";
 import { useApplianceMode } from "./hooks/useApplianceMode";
 import {
   listMonitors,
@@ -13,16 +13,18 @@ import {
   setAutostart,
 } from "./services/settings";
 import type { AppSettings, MonitorPreference } from "./types/market";
+import { isDemoMarketData } from "./services/marketData";
 
 export default function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [ready, setReady] = useState(false);
   const [panel, setPanel] = useState(false);
   const [monitors, setMonitors] = useState<MonitorPreference[]>([]);
+  const [displayRange, setDisplayRange] = useState(settings.range);
   const appliance = useApplianceMode();
   const { snapshots, lastUpdated, refresh } = useMarketDashboard(
     settings.instruments,
-    settings.range,
+    displayRange,
     settings.quoteRefreshSeconds,
     appliance.ready && appliance.status.displayActive,
   );
@@ -31,12 +33,21 @@ export default function App() {
       .catch(() => DEFAULT_SETTINGS)
       .then((value) => {
         setSettings(value);
+        setDisplayRange(value.range);
         setReady(true);
         void moveToMonitor(value.targetMonitor, value.fullscreen).catch(
           () => undefined,
         );
       });
   }, []);
+  useEffect(() => {
+    if (!(appliance.ready && appliance.status.displayActive)) return;
+    const timer = window.setInterval(
+      () => setDisplayRange((value) => nextRange(value)),
+      RANGE_ROTATION_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [appliance.ready, appliance.status.displayActive]);
   useEffect(() => {
     if (!ready) return;
     const timer = window.setTimeout(
@@ -85,13 +96,17 @@ export default function App() {
           />
         ))}
         <StatusCard
-          range={settings.range}
+          range={displayRange}
           lastUpdated={lastUpdated}
           staleCount={staleCount}
-          onRange={(range) => setSettings((value) => ({ ...value, range }))}
+          onRange={(range) => {
+            setDisplayRange(range);
+            setSettings((value) => ({ ...value, range }));
+          }}
           onRefresh={() => void refresh()}
           onSettings={openSettings}
           appliance={appliance.status}
+          demo={isDemoMarketData()}
         />
       </section>
       {panel && (

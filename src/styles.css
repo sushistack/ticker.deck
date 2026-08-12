@@ -33,9 +33,9 @@ input {
 .dashboard-grid {
   height: 100%;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
 }
 .market-card,
 .status-card {
@@ -43,9 +43,9 @@ input {
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--edge);
-  border-radius: 9px;
+  border-radius: 7px;
   background: linear-gradient(150deg, #111722 0%, #0b0f15 70%);
-  padding: 10px 12px;
+  padding: 8px 9px;
 }
 .market-card:before {
   content: "";
@@ -68,7 +68,7 @@ input {
   gap: 7px;
 }
 .symbol {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.05em;
 }
@@ -88,7 +88,7 @@ input {
 }
 .price {
   font-variant-numeric: tabular-nums;
-  font-size: clamp(23px, 2.1vw, 35px);
+  font-size: clamp(19px, 1.55vw, 28px);
   font-weight: 750;
   line-height: 1.1;
   letter-spacing: -0.035em;
@@ -107,11 +107,11 @@ input {
 }
 .sparkline {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 8px;
-  width: calc(100% - 24px);
-  height: 40%;
+  left: 9px;
+  right: 9px;
+  bottom: 7px;
+  width: calc(100% - 18px);
+  height: 42%;
   overflow: visible;
 }
 .spark-line {
@@ -133,7 +133,7 @@ input {
 .status-card {
   display: flex;
   flex-direction: column;
-  padding: 10px 12px;
+  padding: 8px 9px;
   background:
     radial-gradient(circle at 100% 0, #15263a 0, transparent 48%), #0d1118;
 }
@@ -155,6 +155,24 @@ input {
 .deck-mark span {
   color: #4cc9f0;
 }
+.clock {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.clock time {
+  font-size: clamp(21px, 1.7vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.clock span {
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
 .icon-button {
   border: 0;
   color: #9ba6b5;
@@ -171,10 +189,10 @@ input {
   border: 1px solid var(--edge);
   border-radius: 6px;
   padding: 2px;
-  margin-top: 9px;
+  margin-top: 6px;
 }
 .range-selector button {
-  height: 27px;
+  height: 22px;
   border: 0;
   border-radius: 4px;
   color: #7f8998;
@@ -192,7 +210,7 @@ input {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 3px 7px;
-  margin: auto 0;
+  margin: 6px 0 auto;
   font-size: 10px;
   color: var(--muted);
 }
@@ -291,14 +309,14 @@ input {
   font-weight: 800;
   cursor: pointer;
 }
-@media (max-width: 900px), (max-aspect-ratio: 2/1) {
+@media (max-width: 1200px), (max-aspect-ratio: 2/1) {
   .dashboard-shell {
     height: auto;
     min-height: 100vh;
     overflow: auto;
   }
   .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: none;
   }
   .market-card,

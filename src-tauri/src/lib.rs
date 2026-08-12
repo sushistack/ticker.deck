@@ -4,7 +4,7 @@ mod market;
 mod settings;
 mod window;
 
-use market::{yahoo::YahooFinanceProvider, MarketService};
+use market::{hybrid::HybridMarketProvider, MarketService};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,7 +16,7 @@ pub fn run() {
             None,
         ))
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .manage(MarketService::new(YahooFinanceProvider::new()))
+        .manage(MarketService::new(HybridMarketProvider::new()))
         .manage(appliance_runtime)
         .setup(|app| {
             appliance::start(app.handle().clone());

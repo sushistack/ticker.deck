@@ -12,7 +12,16 @@ describe("settings", () => {
     expect(result.instruments).toEqual(DEFAULT_SETTINGS.instruments);
   });
   it("rejects an empty instrument list", () =>
-    expect(mergeSettings({ instruments: [] }).instruments).toHaveLength(7));
+    expect(mergeSettings({ instruments: [] }).instruments).toHaveLength(11));
+  it("migrates the legacy seven-card wall to the current defaults", () => {
+    const legacy = DEFAULT_SETTINGS.instruments.slice(0, 5).concat([
+      { symbol: "NVDA", label: "NVDA", type: "stock" },
+      { symbol: "QQQ", label: "QQQ", type: "stock" },
+    ]);
+    const result = mergeSettings({ instruments: legacy, launchAtLogin: true });
+    expect(result.instruments).toEqual(DEFAULT_SETTINGS.instruments);
+    expect(result.launchAtLogin).toBe(true);
+  });
   it("sanitizes corrupted range and refresh values", () => {
     const result = mergeSettings({
       range: "bad" as "1D",

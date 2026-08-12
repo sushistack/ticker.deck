@@ -1,4 +1,4 @@
-use crate::market::yahoo::YahooFinanceProvider;
+use crate::market::hybrid::HybridMarketProvider;
 use crate::{
     market::{ChartRange, MarketService, MarketSnapshot},
     settings::{self, AppSettings},
@@ -9,7 +9,7 @@ use tauri::{AppHandle, State, WebviewWindow};
 #[tauri::command]
 pub async fn get_quotes(
     symbols: Vec<String>,
-    service: State<'_, MarketService<YahooFinanceProvider>>,
+    service: State<'_, MarketService<HybridMarketProvider>>,
 ) -> Result<Vec<MarketSnapshot>, String> {
     Ok(service.quotes(symbols).await)
 }
@@ -17,7 +17,7 @@ pub async fn get_quotes(
 pub async fn get_charts(
     symbols: Vec<String>,
     range: ChartRange,
-    service: State<'_, MarketService<YahooFinanceProvider>>,
+    service: State<'_, MarketService<HybridMarketProvider>>,
 ) -> Result<Vec<MarketSnapshot>, String> {
     Ok(service.charts(symbols, range).await)
 }

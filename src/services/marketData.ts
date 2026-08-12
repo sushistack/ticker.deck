@@ -23,6 +23,10 @@ function mockPrice(symbol: string): number {
     "SOL-USD": 178.64,
     "XRP-USD": 3.1842,
     "DOGE-USD": 0.23184,
+    "BNB-USD": 735.2,
+    "ADA-USD": 0.78,
+    "LINK-USD": 24.15,
+    "AVAX-USD": 36.42,
     NVDA: 182.31,
     QQQ: 568.74,
   };
@@ -88,4 +92,8 @@ export function createMarketDataProvider(): MarketDataProvider {
   return import.meta.env.VITE_MOCK_DATA === "true" || !isTauri()
     ? new MockMarketDataProvider()
     : new TauriMarketDataProvider();
+}
+
+export function isDemoMarketData(): boolean {
+  return import.meta.env.VITE_MOCK_DATA === "true" || !isTauri();
 }

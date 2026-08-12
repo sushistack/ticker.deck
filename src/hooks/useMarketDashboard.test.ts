@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeSnapshots, pollingPolicy } from "./useMarketDashboard";
+import { mergeSnapshots, nextRange, pollingPolicy } from "./useMarketDashboard";
 describe("dashboard stale fallback", () => {
   it("keeps the last valid quote and chart when a partial update omits them", () => {
     const quote = {
@@ -37,4 +37,10 @@ describe("appliance polling policy", () => {
       quoteMs: 900000,
       chartEnabled: false,
     }));
+});
+describe("automatic range rotation", () => {
+  it("alternates between the two supported ranges", () => {
+    expect(nextRange("1D")).toBe("1M");
+    expect(nextRange("1M")).toBe("1D");
+  });
 });

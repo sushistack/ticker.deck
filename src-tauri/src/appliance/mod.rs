@@ -1,5 +1,5 @@
 use crate::{
-    market::{yahoo::YahooFinanceProvider, MarketService},
+    market::{hybrid::HybridMarketProvider, MarketService},
     settings,
 };
 use chrono::{Local, Timelike};
@@ -228,7 +228,7 @@ async fn prewarm_market_data(app: &AppHandle) {
         .map(|item| item.symbol)
         .collect::<Vec<_>>();
     let range = settings.range;
-    let service = app.state::<MarketService<YahooFinanceProvider>>();
+    let service = app.state::<MarketService<HybridMarketProvider>>();
     let _ = service.quotes(symbols.clone()).await;
     let _ = service.charts(symbols, range).await;
 }

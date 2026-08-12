@@ -4,6 +4,7 @@ _bmad
 # agents
 .agents
 .claude
+.serena/
 
 # TickerDeck
 node_modules/

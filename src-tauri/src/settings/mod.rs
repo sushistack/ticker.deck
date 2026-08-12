@@ -33,6 +33,10 @@ impl Default for AppSettings {
                 ("SOL-USD", "SOL", "crypto"),
                 ("XRP-USD", "XRP", "crypto"),
                 ("DOGE-USD", "DOGE", "crypto"),
+                ("BNB-USD", "BNB", "crypto"),
+                ("ADA-USD", "ADA", "crypto"),
+                ("LINK-USD", "LINK", "crypto"),
+                ("AVAX-USD", "AVAX", "crypto"),
                 ("NVDA", "NVDA", "stock"),
                 ("QQQ", "QQQ", "stock"),
             ]
@@ -55,7 +59,7 @@ impl AppSettings {
     fn sanitize(mut self) -> Self {
         let defaults = Self::default();
         if self.instruments.is_empty()
-            || self.instruments.len() > 7
+            || self.instruments.len() != 11
             || self.instruments.iter().any(|item| {
                 item.symbol.trim().is_empty()
                     || item.label.trim().is_empty()
@@ -130,7 +134,7 @@ mod tests {
                 .unwrap()
                 .instruments
                 .len(),
-            7
+            11
         );
     }
     #[test]
@@ -144,7 +148,7 @@ mod tests {
         settings.quote_refresh_seconds = 1;
         save_path(&file, &settings).unwrap();
         let loaded = load_path(&file).unwrap();
-        assert_eq!(loaded.instruments.len(), 7);
+        assert_eq!(loaded.instruments.len(), 11);
         assert_eq!(loaded.quote_refresh_seconds, 5);
     }
 }

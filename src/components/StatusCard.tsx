@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { ApplianceStatus, ChartRange } from "../types/market";
 import { formatTime } from "../utils/format";
 import {
@@ -14,6 +15,7 @@ export function StatusCard({
   onRefresh,
   onSettings,
   appliance,
+  demo = false,
 }: {
   range: ChartRange;
   lastUpdated?: number;
@@ -22,7 +24,13 @@ export function StatusCard({
   onRefresh: () => void;
   onSettings: () => void;
   appliance: ApplianceStatus;
+  demo?: boolean;
 }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const applianceLabel =
     appliance.displayPower === "unsupported"
       ? "NO DPMS"
@@ -69,12 +77,24 @@ export function StatusCard({
           </button>
         </div>
       </div>
+      <div className="clock" aria-label="현재 시각">
+        <time>{now.toLocaleTimeString("ko-KR", { hour12: false })}</time>
+        <span>
+          {now.toLocaleDateString("ko-KR", {
+            month: "2-digit",
+            day: "2-digit",
+            weekday: "short",
+          })}
+        </span>
+      </div>
       <RangeSelector value={range} onChange={onRange} />
       <div className="status-body">
         <span
           className={`network-dot ${staleCount || applianceProblem ? "warn" : ""}`}
         />{" "}
-        <strong>{staleCount ? `${staleCount}개 지연` : "LIVE"}</strong>
+        <strong>
+          {demo ? "DEMO / MOCK" : staleCount ? `${staleCount}개 지연` : "LIVE"}
+        </strong>
         {appliance.enabled && (
           <>
             <span title={appliance.detail}>{applianceLabel}</span>

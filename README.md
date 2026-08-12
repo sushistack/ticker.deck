@@ -4,12 +4,13 @@
 
 > A glanceable market dashboard built for an always-on 8.8-inch ultrawide display.
 
-TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows five crypto assets plus NVDA and QQQ in a dense 4×2 grid, with global 1D/1M ranges, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
+TickerDeck is a lightweight Tauri desktop dashboard for a permanent 8.8-inch ultrawide market display. Its primary production topology is a Proxmox mini PC running an Ubuntu desktop VM connected to the physical display; normal Ubuntu and Windows desktop use remains supported. It shows nine crypto assets plus NVDA and QQQ alongside a local clock/status tile in a dense 6×2 grid, with automatic 1D/1M rotation, independent quote/chart refresh schedules, per-symbol failure isolation, monitor restoration, and optional login launch.
 
 ## Highlights
 
 - Native Tauri 2 application with a React/TypeScript UI and Rust market-data layer
-- Purpose-built 1920×480 layout for an 8.8-inch ultrawide display
+- Purpose-built 6×2 layout for a 1920×480 8.8-inch ultrawide display
+- Binance crypto quotes/charts and Yahoo Finance US equity data behind one Rust provider
 - Scheduled Ubuntu/X11 DPMS wake and sleep with refresh-before-wake behavior
 - Reduced overnight polling for reliable 24/7 appliance operation
 - Tag-based GitHub releases for Ubuntu `.deb`/AppImage and Windows NSIS artifacts
@@ -31,11 +32,11 @@ Follow the current [Tauri prerequisites guide](https://v2.tauri.app/start/prereq
 ```bash
 npm install
 npm run dev                  # browser; deterministic mock data
-npm run tauri dev            # desktop; native Yahoo provider
+npm run tauri dev            # desktop; native Binance + Yahoo providers
 VITE_MOCK_DATA=true npm run tauri dev
 ```
 
-Mock mode intentionally simulates rising/falling prices and chart changes. Production Tauri mode routes all external data through Rust; the React frontend never calls Yahoo directly.
+Mock mode intentionally simulates rising/falling prices and chart changes and is visibly marked `DEMO / MOCK`. Production Tauri mode routes all external data through Rust: Binance supplies crypto data and Yahoo supplies US equity data. React never calls either service directly.
 
 ## Build and verify
 
@@ -86,7 +87,9 @@ Monitor selection compares available displays by name, resolution, position, and
 
 ## Architecture
 
-React renders memo-friendly SVG sparklines and owns separate quote/chart timers. A provider adapter selects mock data in a browser and Tauri commands in desktop mode. Rust's `MarketDataProvider` isolates Yahoo response formats, normalizes quotes/candles, caches chart ranges, and returns a result for each symbol so one failure cannot collapse the grid.
+React renders memo-friendly SVG sparklines and owns separate quote/chart timers. A provider adapter selects clearly labeled mock data in a browser and Tauri commands in desktop mode. Rust's hybrid `MarketDataProvider` routes `*-USD` crypto identifiers to Binance USDT pairs and US symbols to Yahoo, normalizes both response formats, caches each chart range, and returns a result for every symbol so one source failure cannot collapse the grid.
+
+The visible range automatically alternates between 1D and 1M every five seconds while the display is active. This is a cache/view transition, not a five-second full-history download: 1D histories retain a 60-second TTL and 1M histories retain a 10-minute TTL. Rotation and chart polling pause while the appliance display is asleep.
 
 In appliance mode, a native Rust scheduler—not a potentially throttled WebView timer—owns local-time transitions. Its state is emitted to React, which changes polling cadence and shows DPMS failures in the utility card. Appliance mode is opt-in through environment variables, so Windows and ordinary Ubuntu launches never issue display-power commands.
 
@@ -102,4 +105,4 @@ git push origin v0.1.0
 
 GitHub Actions tests both matrix jobs, builds `.deb` and AppImage on Ubuntu, builds the NSIS installer on Windows, and attaches them to one GitHub Release. Code signing and automatic self-update are intentionally deferred; add their secrets and Tauri updater configuration as a separate release-hardening change.
 
-Yahoo Finance access in this project uses unofficial, undocumented endpoints. It is not a guaranteed official free real-time API and may be rate-limited, changed, delayed, or stopped without notice. The provider boundary is intentionally small so another source can replace it.
+Binance access uses its public market-data REST endpoints. Yahoo Finance access uses unofficial, undocumented endpoints and may be rate-limited, changed, delayed, or stopped without notice. Neither source should be treated as an exchange-grade trading feed; the provider boundary is intentionally small so either source can be replaced.
