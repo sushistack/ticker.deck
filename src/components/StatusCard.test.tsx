@@ -2,31 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StatusCard } from "./StatusCard";
 
-describe("StatusCard appliance state", () => {
-  it("does not claim sleep when physical DPMS is unsupported", () => {
-    render(
-      <StatusCard
-        range="1D"
-        staleCount={0}
-        onRange={vi.fn()}
-        onRefresh={vi.fn()}
-        onSettings={vi.fn()}
-        appliance={{
-          enabled: true,
-          displayActive: false,
-          displayPower: "unsupported",
-          nextTransition: "07:00",
-          detail: "Wayland unsupported",
-        }}
-      />,
-    );
-    expect(screen.getByText("NO DPMS")).toHaveAttribute(
-      "title",
-      "Wayland unsupported",
-    );
-    expect(screen.queryByText("SLEEP")).not.toBeInTheDocument();
-  });
-
+describe("StatusCard web status", () => {
   it("keeps manual refresh available", () => {
     const refresh = vi.fn();
     const view = render(
@@ -36,11 +12,6 @@ describe("StatusCard appliance state", () => {
         onRange={vi.fn()}
         onRefresh={refresh}
         onSettings={vi.fn()}
-        appliance={{
-          enabled: false,
-          displayActive: true,
-          displayPower: "unmanaged",
-        }}
       />,
     );
     fireEvent.click(view.getByText("↻ 지금 새로고침"));
@@ -56,11 +27,6 @@ describe("StatusCard appliance state", () => {
         onRefresh={vi.fn()}
         onSettings={vi.fn()}
         demo
-        appliance={{
-          enabled: false,
-          displayActive: true,
-          displayPower: "unmanaged",
-        }}
       />,
     );
     expect(screen.getByText("DEMO / MOCK")).toBeInTheDocument();

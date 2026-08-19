@@ -1,0 +1,12 @@
+.git
+.github
+.agents
+_bmad
+_bmad-output
+node_modules
+dist
+server-dist
+coverage
+deployment
+*.log
+.DS_Store

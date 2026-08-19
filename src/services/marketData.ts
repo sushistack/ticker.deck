@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import type {
   ChartPoint,
   ChartRange,
@@ -10,9 +9,6 @@ export interface MarketDataProvider {
   getQuotes(symbols: string[]): Promise<MarketSnapshot[]>;
   getCharts(symbols: string[], range: ChartRange): Promise<MarketSnapshot[]>;
 }
-const isTauri = () =>
-  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
 function seeded(symbol: string): number {
   return [...symbol].reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
@@ -83,20 +79,30 @@ export class MockMarketDataProvider implements MarketDataProvider {
     }));
   }
 }
-export class TauriMarketDataProvider implements MarketDataProvider {
-  getQuotes(symbols: string[]) {
-    return invoke<MarketSnapshot[]>("get_quotes", { symbols });
+export class HttpMarketDataProvider implements MarketDataProvider {
+  async getQuotes(symbols: string[]) {
+    return request("/api/quotes", { symbols: symbols.join(",") });
   }
-  getCharts(symbols: string[], range: ChartRange) {
-    return invoke<MarketSnapshot[]>("get_charts", { symbols, range });
+  async getCharts(symbols: string[], range: ChartRange) {
+    return request("/api/charts", { symbols: symbols.join(","), range });
   }
 }
+
+async function request(path: string, params: Record<string, string>) {
+  const response = await fetch(`${path}?${new URLSearchParams(params)}`, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!response.ok) throw new Error(`market API HTTP ${response.status}`);
+  return (await response.json()) as MarketSnapshot[];
+}
+
 export function createMarketDataProvider(): MarketDataProvider {
-  return import.meta.env.VITE_MOCK_DATA === "true" || !isTauri()
+  return import.meta.env.VITE_MOCK_DATA === "true"
     ? new MockMarketDataProvider()
-    : new TauriMarketDataProvider();
+    : new HttpMarketDataProvider();
 }
 
 export function isDemoMarketData(): boolean {
-  return import.meta.env.VITE_MOCK_DATA === "true" || !isTauri();
+  return import.meta.env.VITE_MOCK_DATA === "true";
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mergeSnapshots, nextRange, pollingPolicy } from "./useMarketDashboard";
+import {
+  markSnapshotsStale,
+  mergeSnapshots,
+  nextRange,
+} from "./useMarketDashboard";
 describe("dashboard stale fallback", () => {
   it("keeps the last valid quote and chart when a partial update omits them", () => {
     const quote = {
@@ -15,7 +19,8 @@ describe("dashboard stale fallback", () => {
         symbol: "QQQ",
         quote,
         chart: [{ timestamp: 1, price: 567 }],
-        stale: false,
+        stale: true,
+        error: "old failure",
       },
     };
     const merged = mergeSnapshots(current, [
@@ -25,18 +30,36 @@ describe("dashboard stale fallback", () => {
     expect(merged.QQQ.chart).toHaveLength(1);
     expect(merged.QQQ.stale).toBe(true);
   });
-});
-describe("appliance polling policy", () => {
-  it("uses normal polling while the display is active", () =>
-    expect(pollingPolicy(true, 5)).toEqual({
-      quoteMs: 5000,
-      chartEnabled: true,
-    }));
-  it("reduces quote polling and pauses charts overnight", () =>
-    expect(pollingPolicy(false, 5)).toEqual({
-      quoteMs: 900000,
-      chartEnabled: false,
-    }));
+
+  it("clears an old provider error after a successful update", () => {
+    const current = {
+      QQQ: {
+        symbol: "QQQ",
+        chart: [],
+        stale: true,
+        error: "offline",
+      },
+    };
+    const merged = mergeSnapshots(current, [
+      { symbol: "QQQ", chart: [], stale: false },
+    ]);
+    expect(merged.QQQ.error).toBeUndefined();
+  });
+  it("marks a failed chart request stale without dropping cached points", () => {
+    const current = {
+      QQQ: {
+        symbol: "QQQ",
+        chart: [{ timestamp: 1, price: 10 }],
+        stale: false,
+      },
+    };
+    const stale = markSnapshotsStale(current, ["QQQ"]);
+    expect(stale.QQQ).toMatchObject({
+      chart: [{ timestamp: 1, price: 10 }],
+      stale: true,
+      error: "연결 지연",
+    });
+  });
 });
 describe("automatic range rotation", () => {
   it("alternates between the two supported ranges", () => {

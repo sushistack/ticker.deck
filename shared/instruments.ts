@@ -1,0 +1,15 @@
+export const DEFAULT_INSTRUMENTS = [
+  { symbol: "BTC-USD", label: "BTC", type: "crypto" },
+  { symbol: "ETH-USD", label: "ETH", type: "crypto" },
+  { symbol: "SOL-USD", label: "SOL", type: "crypto" },
+  { symbol: "XRP-USD", label: "XRP", type: "crypto" },
+  { symbol: "DOGE-USD", label: "DOGE", type: "crypto" },
+  { symbol: "ZEC-USD", label: "ZCASH", type: "crypto" },
+  { symbol: "KRW=X", label: "USD/KRW", type: "stock" },
+  { symbol: "^IXIC", label: "NASDAQ", type: "stock" },
+  { symbol: "^GSPC", label: "S&P500", type: "stock" },
+  { symbol: "QQQ", label: "QQQ", type: "stock" },
+  { symbol: "IONQ", label: "IONQ", type: "stock" },
+  { symbol: "ORCL", label: "ORCL", type: "stock" },
+  { symbol: "LHX", label: "LHX", type: "stock" },
+] as const;

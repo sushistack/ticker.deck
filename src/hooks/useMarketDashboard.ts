@@ -3,13 +3,6 @@ import { CHART_REFRESH_MS } from "../config";
 import { createMarketDataProvider } from "../services/marketData";
 import type { ChartRange, Instrument, MarketSnapshot } from "../types/market";
 
-export function pollingPolicy(displayActive: boolean, quoteSeconds: number) {
-  return {
-    quoteMs: displayActive ? Math.max(5, quoteSeconds) * 1000 : 15 * 60 * 1000,
-    chartEnabled: displayActive,
-  };
-}
-
 export const mergeSnapshots = (
   current: Record<string, MarketSnapshot>,
   incoming: MarketSnapshot[],
@@ -23,6 +16,7 @@ export const mergeSnapshots = (
         ...item,
         quote: item.quote ?? previous?.quote,
         chart: item.chart.length ? item.chart : (previous?.chart ?? []),
+        error: item.error,
       },
     };
   }, current);
@@ -30,13 +24,30 @@ export const mergeSnapshots = (
 export const nextRange = (range: ChartRange): ChartRange =>
   range === "1D" ? "1M" : "1D";
 
+export const markSnapshotsStale = (
+  current: Record<string, MarketSnapshot>,
+  symbols: string[],
+  error = "연결 지연",
+) =>
+  Object.fromEntries(
+    symbols.map((symbol) => [
+      symbol,
+      {
+        ...current[symbol],
+        symbol,
+        chart: current[symbol]?.chart ?? [],
+        stale: true,
+        error,
+      },
+    ]),
+  );
+
 export function useMarketDashboard(
   instruments: Instrument[],
   range: ChartRange,
   quoteSeconds: number,
-  displayActive = true,
 ) {
-  const policy = pollingPolicy(displayActive, quoteSeconds);
+  const quoteMs = Math.max(5, quoteSeconds) * 1000;
   const provider = useMemo(createMarketDataProvider, []);
   const [quotes, setQuotes] = useState<Record<string, MarketSnapshot>>({});
   const [charts, setCharts] = useState<
@@ -46,48 +57,65 @@ export function useMarketDashboard(
   const mounted = useRef(true);
   const quoteRequest = useRef(0);
   const chartRequest = useRef<Record<ChartRange, number>>({ "1D": 0, "1M": 0 });
+  const quotePending = useRef<Promise<void> | null>(null);
+  const chartPending = useRef<Record<ChartRange, Promise<void> | null>>({
+    "1D": null,
+    "1M": null,
+  });
   const symbols = useMemo(
     () => instruments.map((item) => item.symbol),
     [instruments],
   );
-  const refreshQuotes = useCallback(async () => {
+  const refreshQuotes = useCallback((): Promise<void> => {
+    if (quotePending.current) return quotePending.current;
     const request = ++quoteRequest.current;
-    try {
-      const data = await provider.getQuotes(symbols);
-      if (mounted.current && request === quoteRequest.current) {
-        setQuotes((value) => mergeSnapshots(value, data));
-        if (data.some((item) => !item.stale)) setLastUpdated(Date.now() / 1000);
+    const pending = (async () => {
+      try {
+        const data = await provider.getQuotes(symbols);
+        if (mounted.current && request === quoteRequest.current) {
+          setQuotes((value) => mergeSnapshots(value, data));
+          if (data.some((item) => !item.stale))
+            setLastUpdated(Date.now() / 1000);
+        }
+      } catch {
+        if (mounted.current && request === quoteRequest.current)
+          setQuotes((value) => markSnapshotsStale(value, symbols));
       }
-    } catch {
-      if (mounted.current && request === quoteRequest.current)
-        setQuotes((value) =>
-          Object.fromEntries(
-            symbols.map((symbol) => [
-              symbol,
-              {
-                ...value[symbol],
-                symbol,
-                chart: value[symbol]?.chart ?? [],
-                stale: true,
-                error: "연결 지연",
-              },
-            ]),
-          ),
-        );
-    }
+    })();
+    quotePending.current = pending;
+    const cleanup = () => {
+      if (quotePending.current === pending) quotePending.current = null;
+    };
+    void pending.then(cleanup, cleanup);
+    return pending;
   }, [provider, symbols]);
-  const refreshCharts = useCallback(async () => {
+  const refreshCharts = useCallback((): Promise<void> => {
+    const existing = chartPending.current[range];
+    if (existing) return existing;
     const request = ++chartRequest.current[range];
-    try {
-      const data = await provider.getCharts(symbols, range);
-      if (mounted.current && request === chartRequest.current[range])
-        setCharts((value) => ({
-          ...value,
-          [range]: mergeSnapshots(value[range], data),
-        }));
-    } catch {
-      /* retain cached chart */
-    }
+    const pending = (async () => {
+      try {
+        const data = await provider.getCharts(symbols, range);
+        if (mounted.current && request === chartRequest.current[range])
+          setCharts((value) => ({
+            ...value,
+            [range]: mergeSnapshots(value[range], data),
+          }));
+      } catch {
+        if (mounted.current && request === chartRequest.current[range])
+          setCharts((value) => ({
+            ...value,
+            [range]: markSnapshotsStale(value[range], symbols),
+          }));
+      }
+    })();
+    chartPending.current[range] = pending;
+    const cleanup = () => {
+      if (chartPending.current[range] === pending)
+        chartPending.current[range] = null;
+    };
+    void pending.then(cleanup, cleanup);
+    return pending;
   }, [provider, range, symbols]);
   useEffect(() => {
     mounted.current = true;
@@ -96,20 +124,19 @@ export function useMarketDashboard(
     };
   }, []);
   useEffect(() => {
-    if (displayActive) void refreshQuotes();
-    const timer = window.setInterval(refreshQuotes, policy.quoteMs);
+    void refreshQuotes();
+    const timer = window.setInterval(refreshQuotes, quoteMs);
     return () => {
       window.clearInterval(timer);
     };
-  }, [displayActive, policy.quoteMs, refreshQuotes]);
+  }, [quoteMs, refreshQuotes]);
   useEffect(() => {
-    if (!policy.chartEnabled) return;
     void refreshCharts();
     const timer = window.setInterval(refreshCharts, CHART_REFRESH_MS[range]);
     return () => {
       window.clearInterval(timer);
     };
-  }, [policy.chartEnabled, range, refreshCharts]);
+  }, [range, refreshCharts]);
   const snapshots = useMemo(
     () =>
       Object.fromEntries(

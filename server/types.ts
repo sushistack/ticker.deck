@@ -1,10 +1,5 @@
 export type ChartRange = "1D" | "1M";
-export type InstrumentType = "crypto" | "stock";
-export interface Instrument {
-  symbol: string;
-  label: string;
-  type: InstrumentType;
-}
+
 export interface Quote {
   symbol: string;
   price: number;
@@ -13,10 +8,12 @@ export interface Quote {
   changePercent: number;
   timestamp: number;
 }
+
 export interface ChartPoint {
   timestamp: number;
   price: number;
 }
+
 export interface MarketSnapshot {
   symbol: string;
   quote?: Quote;
@@ -24,8 +21,13 @@ export interface MarketSnapshot {
   stale: boolean;
   error?: string;
 }
-export interface AppSettings {
-  instruments: Instrument[];
-  range: ChartRange;
-  quoteRefreshSeconds: number;
+
+export interface MarketProvider {
+  getQuote(symbol: string): Promise<Quote>;
+  getChart(symbol: string, range: ChartRange): Promise<ChartPoint[]>;
+}
+
+export interface MarketReader {
+  quotes(symbols: string[]): Promise<MarketSnapshot[]>;
+  charts(symbols: string[], range: ChartRange): Promise<MarketSnapshot[]>;
 }
