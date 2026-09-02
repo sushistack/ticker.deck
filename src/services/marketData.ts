@@ -18,7 +18,7 @@ function mockPrice(symbol: string): number {
     "ETH-USD": 3820.42,
     "SOL-USD": 178.64,
     "XRP-USD": 3.1842,
-    "DOGE-USD": 0.23184,
+    "UNI-USD": 5.839,
     "ZEC-USD": 493.61,
     QQQ: 568.74,
     IONQ: 42.18,

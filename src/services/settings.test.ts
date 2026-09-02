@@ -13,9 +13,9 @@ describe("settings", () => {
   });
   it("rejects an empty instrument list", () =>
     expect(mergeSettings({ instruments: [] }).instruments).toHaveLength(13));
-  it("keeps Zcash after DOGE and IONQ after QQQ", () => {
+  it("keeps Zcash after UNI and IONQ after QQQ", () => {
     const symbols = DEFAULT_SETTINGS.instruments.map(({ symbol }) => symbol);
-    expect(symbols.indexOf("ZEC-USD")).toBe(symbols.indexOf("DOGE-USD") + 1);
+    expect(symbols.indexOf("ZEC-USD")).toBe(symbols.indexOf("UNI-USD") + 1);
     expect(symbols.indexOf("IONQ")).toBe(symbols.indexOf("QQQ") + 1);
   });
   it("migrates the legacy seven-card wall to the current defaults", () => {

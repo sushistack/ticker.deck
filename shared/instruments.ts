@@ -3,7 +3,7 @@ export const DEFAULT_INSTRUMENTS = [
   { symbol: "ETH-USD", label: "ETH", type: "crypto" },
   { symbol: "SOL-USD", label: "SOL", type: "crypto" },
   { symbol: "XRP-USD", label: "XRP", type: "crypto" },
-  { symbol: "DOGE-USD", label: "DOGE", type: "crypto" },
+  { symbol: "UNI-USD", label: "UNI", type: "crypto" },
   { symbol: "ZEC-USD", label: "ZCASH", type: "crypto" },
   { symbol: "KRW=X", label: "USD/KRW", type: "stock" },
   { symbol: "^IXIC", label: "NASDAQ", type: "stock" },

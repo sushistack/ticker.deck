@@ -13,7 +13,7 @@ const BINANCE_PAIRS: Record<string, string> = {
   "ETH-USD": "ETHUSDT",
   "SOL-USD": "SOLUSDT",
   "XRP-USD": "XRPUSDT",
-  "DOGE-USD": "DOGEUSDT",
+  "UNI-USD": "UNIUSDT",
   "ZEC-USD": "ZECUSDT",
 };
 
